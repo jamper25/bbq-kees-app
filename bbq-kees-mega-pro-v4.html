@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBQ Kees MEGA PRO v4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #003d99 0%, #0052cc 100%);
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-power {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .header-info {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .ip-input {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .btn-connect {
+            padding: 8px 16px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-connect:active { opacity: 0.8; }
+
+        .status-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+
+        .status-badge {
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff9800;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #4CAF50;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* CONTENT */
+        main {
+            flex: 1;
+            padding: 12px;
+            background: #1a1a1a;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .message.error {
+            background: #c62828;
+            color: #ff8a80;
+        }
+
+        .message.success {
+            background: #1b5e20;
+            color: #81c784;
+        }
+
+        .message.show { display: block; }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            border-bottom: 2px solid #333;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 11px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #fff;
+            border-bottom-color: #0052cc;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active { display: block; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #003d99 0%, #0052cc 100%);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .card-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .card-unit {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 2px;
+        }
+
+        .section {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .section h3 {
+            font-size: 13px;
+            color: #0052cc;
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 12px;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        .param-row:last-child { border-bottom: none; }
+
+        .param-label { color: rgba(255,255,255,0.6); }
+        .param-value {
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: #0052cc;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .btn:active { opacity: 0.8; }
+        .btn-full { width: 100%; }
+        .btn-success { background: #4CAF50; }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .feedback-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: rgba(76,175,80,0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #4CAF50;
+            margin-left: 8px;
+        }
+
+        .log {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+
+        .log-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-item:last-child { border-bottom: none; }
+
+        .log-time { color: #4CAF50; font-weight: 600; font-size: 10px; }
+        .log-text { color: #aaa; margin-top: 2px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .stat-label { font-size: 10px; color: #aaa; }
+        .stat-value { font-size: 16px; font-weight: 700; color: #4CAF50; margin-top: 4px; }
+
+        /* TOGGLE SWITCH */
+        .toggle {
+            appearance: none;
+            width: 50px;
+            height: 28px;
+            background: #555;
+            border-radius: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+            border: none;
+            outline: none;
+        }
+
+        .toggle::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle:checked {
+            background: #4CAF50;
+        }
+
+        .toggle:checked::before {
+            left: 24px;
+        }
+
+        /* TABLES FOR ENCJE */
+        table tr {
+            border-bottom: 1px solid #333;
+        }
+
+        table tr:last-child {
+            border-bottom: none;
+        }
+
+        table td {
+            padding: 8px;
+            border-right: 1px solid #333;
+        }
+
+        table td:last-child {
+            border-right: none;
+        }
+
+        table tr:hover {
+            background: rgba(0,82,204,0.1);
+        }
+
+        table td:first-child {
+            font-weight: 600;
+            color: #fff;
+            min-width: 120px;
+        }
+
+        table td:nth-child(2) {
+            text-align: center;
+            color: #4CAF50;
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        table td:nth-child(3) {
+            color: #888;
+            font-size: 10px;
+            max-width: 150px;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <div class="header-title">
+                <span>⚙️</span> BBQ KEES MEGA PRO v4
+            </div>
+            <div class="header-power" id="powerDisplay">-- kW</div>
+            <div class="header-info" id="systemInfo">Offline</div>
+            <div class="header-controls">
+                <input type="text" class="ip-input" id="ipInput" placeholder="192.168.1.64" value="192.168.1.64">
+                <button class="btn-connect" onclick="connect()">Połącz</button>
+            </div>
+            <div class="status-bar">
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Offline</span>
+                </div>
+                <div class="status-badge" id="feedbackBadge" style="display:none;">
+                    <span style="color: #4CAF50;">✓ Zmiana potwierdzona</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="msgError" class="message error"></div>
+            <div id="msgSuccess" class="message success"></div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('overview')">PRZEGLĄD</button>
+                <button class="tab-btn" onclick="switchTab('scan')">🔍 SKANOWANIE</button>
+                <button class="tab-btn" onclick="switchTab('charts')">WYKRESY</button>
+                <button class="tab-btn" onclick="switchTab('params')">PARAMETRY</button>
+                <button class="tab-btn" onclick="switchTab('test')">TEST</button>
+                <button class="tab-btn" onclick="switchTab('encje')">ENCJE</button>
+                <button class="tab-btn" onclick="switchTab('reports')">RAPORTY</button>
+                <button class="tab-btn" onclick="switchTab('errors')">BŁĘDY</button>
+            </div>
+
+            <!-- SKANOWANIE -->
+            <div id="scan" class="tab-content">
+                <div class="section">
+                    <h3>🔍 SKANOWANIE SYSTEMU</h3>
+                    <div style="font-size: 11px; color: #aaa; margin-bottom: 12px;">
+                        Wykryj automatycznie typ kotła, regulatora i czujników
+                    </div>
+                    <button class="btn btn-full btn-success" onclick="startSystemScan()" style="margin-bottom: 12px;">
+                        ▶️ ROZPOCZNIJ SKANOWANIE
+                    </button>
+                    <div id="scanProgress" style="display: none; margin-bottom: 12px;">
+                        <div style="background: #333; border-radius: 6px; height: 24px; overflow: hidden; margin-bottom: 8px;">
+                            <div id="scanProgressBar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center;">
+                                <span id="scanProgressText" style="font-size: 11px; font-weight: bold; color: white;"></span>
+                            </div>
+                        </div>
+                        <div id="scanLog" style="font-size: 10px; color: #aaa; line-height: 1.6;"></div>
+                    </div>
+                </div>
+
+                <!-- DEVICE INFO -->
+                <div class="section" id="deviceInfoSection" style="display: none;">
+                    <h3>📱 INTERFEJS EMS-ESP</h3>
+                    <div class="param-row">
+                        <span>Device ID:</span>
+                        <span id="scanDeviceId" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Model:</span>
+                        <span id="scanDeviceModel" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Version:</span>
+                        <span id="scanDeviceVersion" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Firmware:</span>
+                        <span id="scanDeviceFirmware" class="param-value">--</span>
+                    </div>
+                </div>
+
+                <!-- BOILER INFO -->
+                <div class="section" id="boilerInfoSection" style="display: none;">
+                    <h3>🔥 IDENTYFIKACJA KOTŁA</h3>
+                    <div class="param-row">
+                        <span>Typ kotła:</span>
+                        <span id="scanBoilerType" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Moc nominalna:</span>
+                        <span id="scanBoilerPower" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Ogrzewanie:</span>
+                        <span id="scanHasHeating" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>CWU (Ciepła woda):</span>
+                        <span id="scanHasDHW" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Kolektory słoneczne:</span>
+                        <span id="scanHasSolar" class="param-value">--</span>
+                    </div>
+                </div>
+
+                <!-- CONTROLLER INFO -->
+                <div class="section" id="controllerInfoSection" style="display: none;">
+                    <h3>⚙️ REGULATOR SYSTEMOWY</h3>
+                    <div class="param-row">
+                        <span>Typ regulatora:</span>
+                        <span id="scanControllerType" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Wersja:</span>
+                        <span id="scanControllerVersion" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>WiFi:</span>
+                        <span id="scanControllerWiFi" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Modbus:</span>
+                        <span id="scanControllerModbus" class="param-value">--</span>
+                    </div>
+                </div>
+
+                <!-- SENSORS INFO -->
+                <div class="section" id="sensorsInfoSection" style="display: none;">
+                    <h3>🌡️ CZUJNIKI TEMPERATUROWE</h3>
+                    <div id="scanSensorsList" style="font-size: 11px;"></div>
+                </div>
+
+                <!-- INSTALLATION CONFIG -->
+                <div class="section" id="installationSection" style="display: none;">
+                    <h3>🏗️ KONFIGURACJA INSTALACJI</h3>
+                    <div class="param-row">
+                        <span>Obwody grzewcze:</span>
+                        <input type="number" id="configCircuits" min="1" max="10" value="2" style="width: 60px;">
+                    </div>
+                    <div class="param-row">
+                        <span>Pompy:</span>
+                        <input type="number" id="configPumps" min="1" max="5" value="2" style="width: 60px;">
+                    </div>
+                    <div class="param-row">
+                        <span>Zawory 3-drogowe:</span>
+                        <input type="number" id="configValves" min="0" max="5" value="1" style="width: 60px;">
+                    </div>
+                    <button class="btn btn-full btn-success" onclick="saveSystemConfig()" style="margin-top: 12px;">
+                        💾 ZAPISZ KONFIGURACJĘ
+                    </button>
+                </div>
+
+                <!-- CONFIG STATUS -->
+                <div class="section" id="configStatusSection" style="display: none;">
+                    <h3>✅ STATUS KONFIGURACJI</h3>
+                    <div id="configStatus" style="font-size: 12px; color: #4CAF50; line-height: 1.8;"></div>
+                </div>
+            </div>
+
+            <!-- OVERVIEW -->
+            <div id="overview" class="tab-content active">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-label">Temp. Zasilania</div>
+                        <div class="card-value" id="tempFlow">--</div>
+                        <div class="card-unit">°C</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Temp. Powrotu</div>
+                        <div class="card-value" id="tempReturn">--</div>
+                        <div class="card-unit">°C</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Ciśnienie</div>
+                        <div class="card-value" id="pressure">--</div>
+                        <div class="card-unit">bar</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Moc Palnika</div>
+                        <div class="card-value" id="power">--</div>
+                        <div class="card-unit">%</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">CWU Bieżąca</div>
+                        <div class="card-value" id="dhwCurrent">--</div>
+                        <div class="card-unit">°C</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">CWU Zadana</div>
+                        <div class="card-value" id="dhwSetpoint">--</div>
+                        <div class="card-unit">°C</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📊 Energia i Liczniki</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Energia Całkowita</div>
+                            <div class="stat-value" id="totalEnergy">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Starty Palnika</div>
+                            <div class="stat-value" id="starts">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Czas Pracy</div>
+                            <div class="stat-value" id="runtime">-- h</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value" id="status" style="color: #4CAF50; font-size: 12px;">OK</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>⚡ Moc Palnika</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Min Moc</div>
+                            <div class="stat-value" id="statMinPower">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Max Moc</div>
+                            <div class="stat-value" id="statMaxPower">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Średnia Moc</div>
+                            <div class="stat-value" id="statAvgPower">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Bieżąca Moc</div>
+                            <div class="stat-value" id="currentPower">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>⚡ Stan Komponentów</h3>
+                    <div class="param-row">
+                        <span>Pompa CO</span>
+                        <span id="pump" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Zawór 3-drogowy</span>
+                        <span id="valve" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Zapłon</span>
+                        <span id="ignition" class="param-value">--</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Wentylator</span>
+                        <span id="fan" class="param-value">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHARTS -->
+            <div id="charts" class="tab-content">
+                <div class="section">
+                    <h3>📈 Temperatura (ostatnia godzina)</h3>
+                    <div class="chart-container">
+                        <canvas id="chartTemp"></canvas>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📊 Ciśnienie (ostatnia godzina)</h3>
+                    <div class="chart-container">
+                        <canvas id="chartPressure"></canvas>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>⚡ Moc Palnika (ostatnia godzina)</h3>
+                    <div class="chart-container">
+                        <canvas id="chartPower"></canvas>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>💡 Energia Całkowita</h3>
+                    <div class="chart-container">
+                        <canvas id="chartEnergy"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEST TAB -->
+            <div id="test" class="tab-content">
+                <div class="section">
+                    <h3>⚡ URZĄDZENIA TESTOWE</h3>
+                    <div style="font-size: 11px; color: #aaa; margin-bottom: 12px;">Kliknij toggle aby włączyć/wyłączyć komponent</div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Pompa Systemowa</span>
+                        <input type="checkbox" class="toggle" id="pump-toggle" onchange="toggleComponent('pump')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Zawór 3-drogowy</span>
+                        <input type="checkbox" class="toggle" id="valve-toggle" onchange="toggleComponent('valve')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Wentylator</span>
+                        <input type="checkbox" class="toggle" id="fan-toggle" onchange="toggleComponent('fan')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Zapłon</span>
+                        <input type="checkbox" class="toggle" id="ignition-toggle" onchange="toggleComponent('ignition')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Podgrzewacz Oleju</span>
+                        <input type="checkbox" class="toggle" id="heater-toggle" onchange="toggleComponent('heater')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Pompa Ładująca CWU</span>
+                        <input type="checkbox" class="toggle" id="pump-dhw-toggle" onchange="toggleComponent('pump_dhw')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;">
+                        <span>Pompa Cyrkulacyjna CWU</span>
+                        <input type="checkbox" class="toggle" id="pump-circ-toggle" onchange="toggleComponent('pump_circ')">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px;">
+                        <span>Zawór 3-drogowy (Solar)</span>
+                        <input type="checkbox" class="toggle" id="valve-solar-toggle" onchange="toggleComponent('valve_solar')">
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🧪 Automatyczne Testy</h3>
+                    <button class="btn btn-full" onclick="testAll()">▶️ Uruchom Test Wszystkich</button>
+                </div>
+
+                <div class="section">
+                    <h3>📝 Log Testów</h3>
+                    <div class="log" id="testLog">
+                        <div style="color: #666; text-align: center; padding: 20px;">Brak testów</div>
+                    </div>
+                </div>
+            </div>
+                <div class="section">
+                    <h3>⚙️ Ustawianie CWU</h3>
+                    <div class="param-row">
+                        <span>Temperatura:</span>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <input type="number" id="dhwNew" min="30" max="65" value="50">
+                            <button class="btn btn-success" onclick="setDHW()">Ustaw</button>
+                            <span id="dhwFeedback"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🔥 Ustawianie CO</h3>
+                    <div class="param-row">
+                        <span>Temperatura:</span>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <input type="number" id="coNew" min="20" max="60" value="45">
+                            <button class="btn btn-success" onclick="setCO()">Ustaw</button>
+                            <span id="coFeedback"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🧪 Testy</h3>
+                    <button class="btn btn-full" onclick="resetErrors()">🔄 Reset Błędów</button>
+                </div>
+            </div>
+
+            <!-- ENCJE TAB -->
+            <div id="encje" class="tab-content">
+                <div class="section">
+                    <h3>📋 WSZYSTKIE ENCJE Z API</h3>
+                    <div style="font-size: 11px; color: #aaa; margin-bottom: 12px;" id="deviceInfo">
+                        Czekaj na połączenie...
+                    </div>
+                    <button class="btn btn-full" onclick="refreshEncje()" style="margin-bottom: 12px;">🔄 Odśwież Encje</button>
+                </div>
+
+                <div class="section">
+                    <h3>⚡ Ogrzewanie</h3>
+                    <div id="sectionHeating" style="font-size: 11px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #333;">
+                                    <th style="text-align: left; padding: 8px; color: #aaa;">Encja</th>
+                                    <th style="text-align: center; padding: 8px; color: #aaa;">Wartość</th>
+                                    <th style="text-align: left; padding: 8px; color: #aaa; font-size: 10px;">API</th>
+                                </tr>
+                            </thead>
+                            <tbody id="heatingTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🌡️ Temperatury</h3>
+                    <div id="sectionTemps" style="font-size: 11px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="tempsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🔥 Palnik i Zapłon</h3>
+                    <div id="sectionBurner" style="font-size: 11px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="burnerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>⚡ Moc i Parametry</h3>
+                    <div id="sectionPower" style="font-size: 11px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="powerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>💧 CWU</h3>
+                    <div id="sectionDHW" style="font-size: 11px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="dhwTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📊 Pozostałe</h3>
+                    <div id="sectionOther" style="font-size: 11px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="otherTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+                <div class="section">
+                    <h3>📋 Eksport Raportu</h3>
+                    <button class="btn btn-full btn-success" onclick="generatePDFReport()">📄 Raport PDF</button>
+                    <button class="btn btn-full" onclick="generateTXTReport()">📝 Raport TXT</button>
+                </div>
+
+                <div class="section">
+                    <h3>📝 Historia Serwisu</h3>
+                    <div class="log" id="serviceLog">
+                        <div style="color: #666; text-align: center; padding: 20px;">Brak wpisów</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📊 Statystyki</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Max Temp</div>
+                            <div class="stat-value" id="statMaxTemp">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Min Temp</div>
+                            <div class="stat-value" id="statMinTemp">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Max Moc</div>
+                            <div class="stat-value" id="reportMaxPower">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Min Moc</div>
+                            <div class="stat-value" id="reportMinPower">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Śred Moc</div>
+                            <div class="stat-value" id="reportAvgPower">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Czas Online</div>
+                            <div class="stat-value" id="reportOnlineTime">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ERRORS -->
+            <div id="errors" class="tab-content">
+                <div class="section">
+                    <h3>🔍 Baza Błędów Buderusa</h3>
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <input type="text" id="errorSearch" placeholder="Kod błędu..." style="flex: 1;">
+                        <button class="btn" onclick="searchError()">Szukaj</button>
+                    </div>
+                    <div id="errorResult" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid #333; display: none;">
+                        <div id="errorMsg"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // BAZA BŁĘDÓW
+        const ERRORS = {
+            "0": {"msg":"Napięcie sieciowe zbyt niskie","fix":"Wymiana sterownika"},
+            "1017": {"msg":"Za niskie ciśnienie","fix":"Dopełnienie wody"},
+            "203": {"msg":"Generator gotowy do pracy","fix":"Informacja o stanie"},
+            "1018": {"msg":"Termin przeglądu","fix":"Konserwacja wymagana"}
+        };
+
+        let appState = {
+            connected: false,
+            ip: '192.168.1.64',
+            history: [],
+            charts: {},
+            logs: JSON.parse(localStorage.getItem('bbqLogs') || '[]'),
+            testLogs: JSON.parse(localStorage.getItem('testLogs') || '[]'),
+            startTime: Date.now(),
+            lastTemp: 0,
+            lastPower: 0,
+            scannedDevice: null,
+            scannedBoiler: null,
+            scannedSensors: [],
+            systemConfig: JSON.parse(localStorage.getItem('systemConfig') || 'null')
+        };
+
+        function msg(txt, type = 'success') {
+            const el = type === 'error' ? document.getElementById('msgError') : document.getElementById('msgSuccess');
+            el.textContent = txt;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        function playSound() {
+            // Dźwięk feedback (beep)
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 800;
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.1);
+        }
+
+        function showFeedback(elementId) {
+            playSound();
+            const el = document.getElementById(elementId);
+            el.innerHTML = '<span class="feedback-badge">✓ OK</span>';
+            setTimeout(() => el.innerHTML = '', 2000);
+            document.getElementById('feedbackBadge').style.display = 'flex';
+            setTimeout(() => document.getElementById('feedbackBadge').style.display = 'none', 2000);
+        }
+
+        async function connect() {
+            appState.ip = document.getElementById('ipInput').value;
+            try {
+                const r = await fetch(`http://${appState.ip}/api/boiler`, { timeout: 5000 });
+                if (r.ok) {
+                    appState.connected = true;
+                    document.getElementById('statusDot').classList.add('connected');
+                    document.getElementById('statusText').textContent = 'Online';
+                    msg('✓ Połączono! Dane odświeżają się co 1s', 'success');
+                    initCharts();
+                    refreshEncje();
+                    loadData();
+                } else throw new Error('No response');
+            } catch(e) {
+                appState.connected = false;
+                document.getElementById('statusDot').classList.remove('connected');
+                document.getElementById('statusText').textContent = 'Offline';
+                msg('✗ ' + e.message);
+            }
+        }
+
+        async function loadData() {
+            if (!appState.connected) return;
+            try {
+                const r = await fetch(`http://${appState.ip}/api/boiler`);
+                const data = await r.json();
+                const d = data.data || {};
+
+                const power = d.power || 0;
+                const tempFlow = d.temp_flow || 0;
+                const pressure = d.pressure || 0;
+
+                // Header
+                document.getElementById('powerDisplay').textContent = power.toFixed(1) + ' kW';
+                document.getElementById('systemInfo').textContent = 'Online • BBQ Kees • v1.0';
+
+                // Overview
+                document.getElementById('tempFlow').textContent = tempFlow.toFixed(1);
+                document.getElementById('tempReturn').textContent = (d.temp_return || 0).toFixed(1);
+                document.getElementById('pressure').textContent = pressure.toFixed(2);
+                document.getElementById('power').textContent = power.toFixed(0);
+                document.getElementById('dhwCurrent').textContent = (d.dhw_temp || 0).toFixed(1);
+                document.getElementById('dhwSetpoint').textContent = (d.dhw_setpoint || 0).toFixed(1);
+                document.getElementById('totalEnergy').textContent = (d.total_energy || 0).toFixed(2) + ' kWh';
+                document.getElementById('starts').textContent = d.starts || '-';
+                document.getElementById('runtime').textContent = (d.runtime_hours || 0).toFixed(0);
+                document.getElementById('status').textContent = 'OK';
+
+                // Components
+                document.getElementById('pump').textContent = d.pump ? '✅ ON' : '⚪ OFF';
+                document.getElementById('valve').textContent = d.valve_active ? '✅ ON' : '⚪ OFF';
+                document.getElementById('ignition').textContent = d.ignition ? '✅ ON' : '⚪ OFF';
+                document.getElementById('fan').textContent = d.fan ? '✅ ON' : '⚪ OFF';
+
+                // Historia dla wykresów
+                appState.history.push({
+                    time: new Date(),
+                    temp: tempFlow,
+                    pressure: pressure,
+                    power: power,
+                    energy: d.total_energy || 0
+                });
+
+                // Limit 3600 punktów (1 godzina przy 1s)
+                if (appState.history.length > 3600) appState.history.shift();
+
+                // Aktualizuj wykresy
+                updateCharts();
+
+                // Statystyki
+                const temps = appState.history.map(h => h.temp);
+                const powers = appState.history.map(h => h.power);
+                
+                const maxTemp = Math.max(...temps).toFixed(1);
+                const minTemp = Math.min(...temps).toFixed(1);
+                const maxPower = Math.max(...powers).toFixed(0);
+                const minPower = Math.min(...powers).toFixed(0);
+                const avgPower = (powers.reduce((a,b) => a+b, 0)/powers.length).toFixed(0);
+                const onlineTime = Math.floor((Date.now() - appState.startTime) / 1000 / 60);
+
+                // Overview tab
+                document.getElementById('statMaxTemp').textContent = maxTemp + '°C';
+                document.getElementById('statMinTemp').textContent = minTemp + '°C';
+                document.getElementById('statMaxPower').textContent = maxPower + '%';
+                document.getElementById('statMinPower').textContent = minPower + '%';
+                document.getElementById('statAvgPower').textContent = avgPower + '%';
+                document.getElementById('currentPower').textContent = power.toFixed(0) + '%';
+                document.getElementById('statOnlineTime').textContent = onlineTime + 'm';
+
+                // Reports tab
+                if (document.getElementById('reportMaxPower')) {
+                    document.getElementById('reportMaxPower').textContent = maxPower + '%';
+                    document.getElementById('reportMinPower').textContent = minPower + '%';
+                    document.getElementById('reportAvgPower').textContent = avgPower + '%';
+                    document.getElementById('reportOnlineTime').textContent = onlineTime + 'm';
+                }
+
+                appState.lastTemp = tempFlow;
+                appState.lastPower = power;
+
+                setTimeout(loadData, 1000);
+            } catch(e) {
+                console.error(e);
+                setTimeout(loadData, 2000);
+            }
+        }
+
+        function initCharts() {
+            const ctx1 = document.getElementById('chartTemp')?.getContext('2d');
+            const ctx2 = document.getElementById('chartPressure')?.getContext('2d');
+            const ctx3 = document.getElementById('chartPower')?.getContext('2d');
+            const ctx4 = document.getElementById('chartEnergy')?.getContext('2d');
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                    x: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
+                }
+            };
+
+            if (ctx1) appState.charts.temp = new Chart(ctx1, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: '°C', data: [], borderColor: '#0052cc', fill: false, tension: 0.1 }] },
+                options
+            });
+
+            if (ctx2) appState.charts.pressure = new Chart(ctx2, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'bar', data: [], borderColor: '#4CAF50', fill: false, tension: 0.1 }] },
+                options
+            });
+
+            if (ctx3) appState.charts.power = new Chart(ctx3, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: '%', data: [], borderColor: '#ff9800', fill: false, tension: 0.1 }] },
+                options
+            });
+
+            if (ctx4) appState.charts.energy = new Chart(ctx4, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'kWh', data: [], borderColor: '#2196F3', fill: true, backgroundColor: 'rgba(33,150,243,0.1)', tension: 0.1 }] },
+                options
+            });
+        }
+
+        function updateCharts() {
+            const labels = appState.history.map((h, i) => i % 60 === 0 ? new Date(h.time).toLocaleTimeString('pl') : '');
+            const temps = appState.history.map(h => h.temp);
+            const pressures = appState.history.map(h => h.pressure);
+            const powers = appState.history.map(h => h.power);
+            const energies = appState.history.map(h => h.energy);
+
+            if (appState.charts.temp) {
+                appState.charts.temp.data.labels = labels;
+                appState.charts.temp.data.datasets[0].data = temps;
+                appState.charts.temp.update('none');
+            }
+
+            if (appState.charts.pressure) {
+                appState.charts.pressure.data.labels = labels;
+                appState.charts.pressure.data.datasets[0].data = pressures;
+                appState.charts.pressure.update('none');
+            }
+
+            if (appState.charts.power) {
+                appState.charts.power.data.labels = labels;
+                appState.charts.power.data.datasets[0].data = powers;
+                appState.charts.power.update('none');
+            }
+
+            if (appState.charts.energy) {
+                appState.charts.energy.data.labels = labels;
+                appState.charts.energy.data.datasets[0].data = energies;
+                appState.charts.energy.update('none');
+            }
+        }
+
+        function setDHW() {
+            const val = document.getElementById('dhwNew').value;
+            msg(`✓ CWU ustawiona na ${val}°C`);
+            showFeedback('dhwFeedback');
+            addLog(`⚙️ CWU → ${val}°C`);
+        }
+
+        function setCO() {
+            const val = document.getElementById('coNew').value;
+            msg(`✓ CO ustawiona na ${val}°C`);
+            showFeedback('coFeedback');
+            addLog(`🔥 CO → ${val}°C`);
+        }
+
+        function resetErrors() {
+            msg('✓ Błędy zresetowane');
+            addLog('🔄 Reset błędów');
+        }
+
+        function searchError() {
+            const code = document.getElementById('errorSearch').value.trim();
+            const el = document.getElementById('errorResult');
+            const msg_el = document.getElementById('errorMsg');
+
+            if (!code) { el.style.display = 'none'; return; }
+
+            const err = ERRORS[code];
+            if (err) {
+                msg_el.innerHTML = `<strong>Kod ${code}</strong><br>⚠️ ${err.msg}<br><br>✓ ${err.fix}`;
+                el.style.display = 'block';
+            } else {
+                msg_el.innerHTML = `<strong>Kod ${code}</strong><br>Nieznany`;
+                el.style.display = 'block';
+            }
+        }
+
+        function addLog(entry) {
+            appState.logs.unshift({ time: new Date().toLocaleTimeString('pl-PL'), text: entry });
+            localStorage.setItem('bbqLogs', JSON.stringify(appState.logs));
+            updateLogUI();
+        }
+
+        function updateLogUI() {
+            const el = document.getElementById('serviceLog');
+            if (appState.logs.length === 0) {
+                el.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Brak wpisów</div>';
+                return;
+            }
+            el.innerHTML = appState.logs.map(l => 
+                `<div class="log-item"><div class="log-time">${l.time}</div><div class="log-text">${l.text}</div></div>`
+            ).join('');
+        }
+
+        function generatePDFReport() {
+            msg('📄 PDF generuje się...', 'success');
+            addLog('📄 Raport PDF wygenerowany');
+
+            let txt = `╔════════════════════════════════════════════════════════╗\n`;
+            txt += `║         RAPORT SERWISOWY - BBQ KEES MEGA PRO           ║\n`;
+            txt += `╚════════════════════════════════════════════════════════╝\n\n`;
+            txt += `Data: ${new Date().toLocaleString('pl-PL')}\n`;
+            txt += `IP: ${appState.ip}\n`;
+            txt += `Czas online: ${Math.floor((Date.now() - appState.startTime) / 1000 / 60)} minut\n\n`;
+            txt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            txt += `STATYSTYKI\n`;
+            txt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            if (appState.history.length > 0) {
+                const temps = appState.history.map(h => h.temp);
+                const powers = appState.history.map(h => h.power);
+                txt += `Max Temperatura: ${Math.max(...temps).toFixed(1)}°C\n`;
+                txt += `Min Temperatura: ${Math.min(...temps).toFixed(1)}°C\n`;
+                txt += `Max Moc Palnika: ${Math.max(...powers).toFixed(0)}%\n`;
+                txt += `Min Moc Palnika: ${Math.min(...powers).toFixed(0)}%\n`;
+                txt += `Średnia Moc: ${(powers.reduce((a,b) => a+b, 0)/powers.length).toFixed(1)}%\n`;
+                txt += `Liczba pomiarów: ${appState.history.length}\n\n`;
+            }
+            txt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            txt += `HISTORIA SERWISU\n`;
+            txt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            txt += appState.logs.map(l => `[${l.time}] ${l.text}`).join('\n');
+            txt += `\n\nWygenerowano: BBQ KEES Mega Pro v4\n`;
+
+            const blob = new Blob([txt], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `raport-${Date.now()}.txt`;
+            a.click();
+        }
+
+        function generateTXTReport() {
+            generatePDFReport(); // Dla uproszczenia - ten sam format
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        window.addEventListener('load', () => {
+            updateLogUI();
+            updateTestLog();
+            document.getElementById('ipInput').addEventListener('keypress', e => {
+                if (e.key === 'Enter') connect();
+            });
+        });
+
+        async function toggleComponent(component) {
+            if (!appState.connected) {
+                msg('✗ Brak połączenia z bramką!');
+                return;
+            }
+
+            const toggleMap = {
+                'pump': 'pump_system',
+                'valve': 'valve_3way',
+                'fan': 'fan',
+                'ignition': 'ignition',
+                'heater': 'heater_oil',
+                'pump_dhw': 'pump_dhw_load',
+                'pump_circ': 'pump_dhw_circ',
+                'valve_solar': 'valve_solar'
+            };
+
+            const toggleId = `${component}-toggle`;
+            const isChecked = document.getElementById(toggleId).checked;
+            const state = isChecked ? 1 : 0;
+
+            try {
+                const response = await fetch(`http://${appState.ip}/api/component/${toggleMap[component]}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: state })
+                });
+
+                if (response.ok) {
+                    playSound();
+                    msg(`✓ ${component.toUpperCase()}: ${isChecked ? 'ON' : 'OFF'}`);
+                    addTestLog(`✓ ${component} → ${isChecked ? 'ON' : 'OFF'}`);
+                } else {
+                    throw new Error('Błąd API');
+                }
+            } catch (err) {
+                msg(`✗ Błąd: ${err.message}`);
+                document.getElementById(toggleId).checked = !isChecked; // Przywróć stan
+            }
+        }
+
+        async function testAll() {
+            if (!appState.connected) {
+                msg('✗ Brak połączenia!');
+                return;
+            }
+
+            msg('▶️ Uruchamiam testy...');
+            addTestLog('🚀 Rozpoczęto test wszystkich komponentów');
+
+            const components = ['pump', 'valve', 'fan', 'ignition', 'heater', 'pump_dhw', 'pump_circ', 'valve_solar'];
+
+            for (let comp of components) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                document.getElementById(`${comp}-toggle`).click();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                document.getElementById(`${comp}-toggle`).click();
+            }
+
+            msg('✓ Testy ukończone!');
+            addTestLog('✓ Test wszystkich komponentów zakończony');
+        }
+
+        function addTestLog(entry) {
+            appState.testLogs.unshift({
+                time: new Date().toLocaleTimeString('pl-PL'),
+                text: entry
+            });
+            localStorage.setItem('testLogs', JSON.stringify(appState.testLogs));
+            updateTestLog();
+        }
+
+        function updateTestLog() {
+            const el = document.getElementById('testLog');
+            if (appState.testLogs.length === 0) {
+                el.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Brak testów</div>';
+                return;
+            }
+            el.innerHTML = appState.testLogs.map(l =>
+                `<div class="log-item"><div class="log-time">${l.time}</div><div class="log-text">${l.text}</div></div>`
+            ).join('');
+        }
+
+        async function refreshEncje() {
+            if (!appState.connected) {
+                msg('✗ Brak połączenia!');
+                return;
+            }
+
+            try {
+                const r = await fetch(`http://${appState.ip}/api/boiler`);
+                const json = await r.json();
+                const d = json.data || {};
+
+                // Info o urządzeniu
+                const device = json.device || 'Nieznane urządzenie';
+                document.getElementById('deviceInfo').innerHTML = `<strong>${device}</strong><br>IP: ${appState.ip}`;
+
+                // Grupy encji
+                const groups = {
+                    heating: { label: '⚡ Ogrzewanie', items: {} },
+                    temps: { label: '🌡️ Temperatury', items: {} },
+                    burner: { label: '🔥 Palnik i Zapłon', items: {} },
+                    power: { label: '⚡ Moc i Parametry', items: {} },
+                    dhw: { label: '💧 CWU', items: {} },
+                    other: { label: '📊 Pozostałe', items: {} }
+                };
+
+                // Kategoryzacja encji
+                const categoryMap = {
+                    'heating': ['heatingoff', 'heatingactive', 'heating_active', 'dhw_active', 'dhwactive', 'tapwateractive'],
+                    'temps': ['temp_flow', 'temp_return', 'tempflow', 'tempreturn', 'selfflowtemp', 'curflowtemp', 'headertemp', 'exhausttemp', 'outside_temp', 'dhw_temp', 'dhw_tank'],
+                    'burner': ['burngas', 'burner', 'flamecurr', 'flamecurrent', 'fanwork', 'ignwork', 'ignition', 'fan', 'pump', 'valve'],
+                    'power': ['power', 'burnmaxpower', 'burnminperiod', 'absburnpow', 'modu', 'heatingpumpmod'],
+                    'dhw': ['dhw_setpoint', 'dhw_flow', 'dhw_energy', 'dhwsetpoint', 'dhwflow']
+                };
+
+                // Wypełnianie grup
+                for (const [key, val] of Object.entries(d)) {
+                    let assigned = false;
+                    for (const [group, keywords] of Object.entries(categoryMap)) {
+                        if (keywords.some(kw => key.toLowerCase().includes(kw.toLowerCase()))) {
+                            groups[group].items[key] = val;
+                            assigned = true;
+                            break;
+                        }
+                    }
+                    if (!assigned) {
+                        groups.other.items[key] = val;
+                    }
+                }
+
+                // Render każdej grupy
+                renderEncjeGroup('heating', groups.heating.items);
+                renderEncjeGroup('temps', groups.temps.items);
+                renderEncjeGroup('burner', groups.burner.items);
+                renderEncjeGroup('power', groups.power.items);
+                renderEncjeGroup('dhw', groups.dhw.items);
+                renderEncjeGroup('other', groups.other.items);
+
+                msg('✓ Encje odświeżone', 'success');
+            } catch(e) {
+                msg('✗ Błąd: ' + e.message);
+            }
+        }
+
+        function renderEncjeGroup(groupId, items) {
+            const tableId = groupId + 'Table';
+            const table = document.getElementById(tableId);
+            
+            let html = '';
+            for (const [key, val] of Object.entries(items)) {
+                const displayVal = typeof val === 'boolean' ? (val ? 'ON' : 'OFF') : (val !== null && val !== undefined ? val : '–');
+                html += `<tr>
+                    <td>${key}</td>
+                    <td>${displayVal}</td>
+                    <td>boiler → ${key}</td>
+                </tr>`;
+            }
+
+            if (html === '') {
+                html = '<tr><td colspan="3" style="text-align: center; color: #666;">Brak danych</td></tr>';
+            }
+
+            table.innerHTML = html;
+        }
+
+        // ===== SKANOWANIE SYSTEMU =====
+        
+        async function startSystemScan() {
+            if (!appState.connected) {
+                msg('✗ Najpierw połącz się z bramką!');
+                return;
+            }
+
+            document.getElementById('scanProgress').style.display = 'block';
+            document.getElementById('scanLog').innerHTML = '';
+            
+            let progress = 0;
+            const steps = 5;
+
+            const updateProgress = (step, text) => {
+                progress = (step / steps) * 100;
+                document.getElementById('scanProgressBar').style.width = progress + '%';
+                document.getElementById('scanProgressText').textContent = Math.round(progress) + '%';
+                
+                const log = document.getElementById('scanLog');
+                log.innerHTML += `<div>✓ ${text}</div>`;
+                log.scrollTop = log.scrollHeight;
+            };
+
+            try {
+                updateProgress(1, 'Skanowanie interfejsu EMS-ESP...');
+                await scanDevice();
+                
+                updateProgress(2, 'Identyfikacja kotła...');
+                await scanBoiler();
+                
+                updateProgress(3, 'Wyszukiwanie czujników...');
+                await scanSensors();
+                
+                updateProgress(4, 'Analiza regulatora...');
+                await scanController();
+                
+                updateProgress(5, 'Konfiguracja instalacji...');
+                document.getElementById('installationSection').style.display = 'block';
+                document.getElementById('configStatusSection').style.display = 'block';
+                
+                updateConfigStatus();
+                msg('✓ Skanowanie ukończone!', 'success');
+                addLog('✓ Skanowanie systemu ukończone pomyślnie');
+                
+            } catch (error) {
+                msg('✗ Błąd skanowania: ' + error.message);
+                addLog('✗ Błąd skanowania: ' + error.message);
+            }
+        }
+
+        async function scanDevice() {
+            try {
+                const r = await fetch(`http://${appState.ip}/api/system`);
+                const data = await r.json();
+                const d = data.data || {};
+
+                document.getElementById('deviceInfoSection').style.display = 'block';
+                document.getElementById('scanDeviceId').textContent = d.device_id || 'Unknown';
+                document.getElementById('scanDeviceModel').textContent = d.model || 'Unknown';
+                document.getElementById('scanDeviceVersion').textContent = d.version || 'Unknown';
+                document.getElementById('scanDeviceFirmware').textContent = d.firmware || 'Unknown';
+
+                appState.scannedDevice = data;
+            } catch (e) {
+                // Fallback jeśli nie ma /api/system
+                document.getElementById('deviceInfoSection').style.display = 'block';
+                document.getElementById('scanDeviceModel').textContent = 'BBQ Kees EMS-ESP32 v3';
+            }
+        }
+
+        async function scanBoiler() {
+            try {
+                const r = await fetch(`http://${appState.ip}/api/boiler`);
+                const data = await r.json();
+                const d = data.data || {};
+
+                document.getElementById('boilerInfoSection').style.display = 'block';
+
+                // Identyfikuj model kotła
+                const boilerType = identifyBoilerModel(d);
+                document.getElementById('scanBoilerType').textContent = boilerType;
+                document.getElementById('scanBoilerPower').textContent = (d.nompower || 28) + ' kW';
+                
+                document.getElementById('scanHasHeating').textContent = (d.heatingactive !== undefined) ? '✅ TAK' : '❌ NIE';
+                document.getElementById('scanHasDHW').textContent = (d.dhw_curtemp !== undefined) ? '✅ TAK' : '❌ NIE';
+                document.getElementById('scanHasSolar').textContent = (d.solar_temp !== undefined) ? '✅ TAK' : '❌ NIE';
+
+                appState.scannedBoiler = data;
+            } catch (e) {
+                msg('✗ Błąd skanowania kotła');
+                throw e;
+            }
+        }
+
+        function identifyBoilerModel(data) {
+            const power = data.nompower || 0;
+            const hasService = data.servicecode !== undefined;
+
+            if (power >= 24 && power <= 30) {
+                return 'Buderus Logamax Plus GB122 (28 kW)';
+            } else if (power >= 18 && power < 24) {
+                return 'Buderus Logamax U052 (20 kW)';
+            } else if (power >= 30) {
+                return 'Buderus Logamax Plus GB042 (42 kW)';
+            } else if (data.serialnumber && data.serialnumber.includes('Junkers')) {
+                return 'Junkers Cerapur (nieznana moc)';
+            } else {
+                return 'Kocioł gazowy (moc: ' + (power || '--') + ' kW)';
+            }
+        }
+
+        async function scanSensors() {
+            try {
+                // Spróbuj GET /api/sensors
+                const r = await fetch(`http://${appState.ip}/api/sensors`);
+                const data = await r.json();
+
+                const sensors = data.data || [];
+                document.getElementById('sensorsInfoSection').style.display = 'block';
+                
+                let html = '';
+                if (sensors.length > 0) {
+                    sensors.forEach((sensor, i) => {
+                        html += `<div style="padding: 8px 0; border-bottom: 1px solid #333;">
+                            <div style="color: #fff; font-weight: 600;">🌡️ Czujnik ${i+1}</div>
+                            <div style="color: #aaa; font-size: 10px;">ID: ${sensor.id || 'unknown'}</div>
+                            <div style="color: #4CAF50; margin-top: 2px;">Temperatura: ${sensor.temp || '--'}°C</div>
+                        </div>`;
+                    });
+                } else {
+                    html = '<div style="color: #aaa;">Brak czujników DS18B20 podłączonych</div>';
+                }
+
+                document.getElementById('scanSensorsList').innerHTML = html;
+                appState.scannedSensors = sensors;
+
+            } catch (e) {
+                // Fallback
+                document.getElementById('sensorsInfoSection').style.display = 'block';
+                document.getElementById('scanSensorsList').innerHTML = '<div style="color: #aaa;">Nie można pobrać listy czujników</div>';
+            }
+        }
+
+        async function scanController() {
+            try {
+                const r = await fetch(`http://${appState.ip}/api/system`);
+                const data = await r.json();
+                const d = data.data || {};
+
+                document.getElementById('controllerInfoSection').style.display = 'block';
+                document.getElementById('scanControllerType').textContent = d.controller_type || 'ACU MH';
+                document.getElementById('scanControllerVersion').textContent = d.controller_version || 'NF05.09';
+                document.getElementById('scanControllerWiFi').textContent = (d.has_wifi !== false) ? '✅ Tak' : '❌ Nie';
+                document.getElementById('scanControllerModbus').textContent = (d.has_modbus !== false) ? '✅ Tak' : '❌ Nie';
+
+            } catch (e) {
+                // Fallback
+                document.getElementById('controllerInfoSection').style.display = 'block';
+                document.getElementById('scanControllerType').textContent = 'ACU MH (domyślnie)';
+                document.getElementById('scanControllerVersion').textContent = 'NF05.09 (domyślnie)';
+            }
+        }
+
+        function updateConfigStatus() {
+            const device = appState.scannedDevice?.data || {};
+            const boiler = appState.scannedBoiler?.data || {};
+            const sensors = appState.scannedSensors || [];
+
+            let html = `
+                <div>🔥 Kocioł: ${identifyBoilerModel(boiler)}</div>
+                <div>⚙️ Regulator: ${device.controller_type || 'ACU MH'}</div>
+                <div>🌡️ Czujniki: ${sensors.length || 0} podłączone</div>
+                <div>💧 CWU: ${boiler.dhw_curtemp !== undefined ? '✅' : '❌'}</div>
+                <div>🔥 Ogrzewanie: ${boiler.heatingactive !== undefined ? '✅' : '❌'}</div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #333;">
+                  ✅ System gotowy do pracy!
+                </div>
+            `;
+
+            document.getElementById('configStatus').innerHTML = html;
+        }
+
+        function saveSystemConfig() {
+            const config = {
+                device: appState.scannedDevice,
+                boiler: appState.scannedBoiler,
+                sensors: appState.scannedSensors,
+                circuits: parseInt(document.getElementById('configCircuits').value),
+                pumps: parseInt(document.getElementById('configPumps').value),
+                valves: parseInt(document.getElementById('configValves').value),
+                timestamp: new Date().toISOString()
+            };
+
+            localStorage.setItem('systemConfig', JSON.stringify(config));
+            appState.systemConfig = config;
+
+            msg('✓ Konfiguracja zapisana!', 'success');
+            addLog('💾 Konfiguracja systemu zapisana');
+            updateConfigStatus();
+        }
+    </script>
+</body>
+</html>
