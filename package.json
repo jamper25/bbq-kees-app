@@ -1,0 +1,26 @@
+{
+  "name": "bbq-kees-pro",
+  "version": "1.0.0",
+  "description": "BBQ KEES PRO - aplikacja serwisowa do kotłów",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cordova build android --release",
+    "dev": "cordova build android",
+    "run": "cordova run android"
+  },
+  "keywords": [
+    "boiler",
+    "bbq-kees",
+    "ems-esp",
+    "serwis"
+  ],
+  "author": "Adam Baca (jamper25)",
+  "license": "MIT",
+  "dependencies": {
+    "cordova-android": "^12.0.0"
+  },
+  "devDependencies": {
+    "cordova": "^12.0.0"
+  }
+}

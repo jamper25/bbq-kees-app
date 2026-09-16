@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.serwiskotlow.bbqkees" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
+    <name>BBQ KEES PRO</name>
+    <description>Aplikacja serwisowa do kotłów BBQ Kees</description>
+    <author email="jamper25@github.com" href="https://github.com/jamper25">Adam Baca</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <icon src="www/img/icon.png" density="ldpi" />
+        <icon src="www/img/icon.png" density="mdpi" />
+        <icon src="www/img/icon.png" density="hdpi" />
+        <icon src="www/img/icon.png" density="xhdpi" />
+    </platform>
+    <preference name="loglevel" value="DEBUG" />
+    <preference name="AndroidLaunchMode" value="singleTop" />
+    <preference name="orientation" value="portrait" />
+    <preference name="webviewbounce" value="false" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="android-useWebView2" value="true" />
+</widget>
