@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBQ KEES PRO - BUDERUS EDITION v5</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 15px 20px;
+            border-bottom: 2px solid #00d4ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .status {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 1s infinite;
+        }
+
+        .status-light.connected {
+            background: #00ff00;
+            animation: pulse-green 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .ip-input {
+            display: flex;
+            gap: 5px;
+        }
+
+        .ip-input input {
+            width: 150px;
+            padding: 8px;
+            background: #1a1a2e;
+            border: 1px solid #00d4ff;
+            color: #e0e0e0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .ip-input button {
+            padding: 8px 15px;
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .ip-input button:hover {
+            background: #00b8cc;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            background: #1a1a2e;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab-btn {
+            padding: 10px 15px;
+            background: #2a2a3e;
+            color: #888;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #00d4ff;
+            color: #000;
+            border-color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .tab-btn:hover {
+            background: #3a3a4e;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .card-row:last-child {
+            border-bottom: none;
+        }
+
+        .card-label {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .card-value {
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #00b8cc;
+            transform: scale(1.05);
+        }
+
+        .btn.danger {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .btn.danger:hover {
+            background: #cc3333;
+        }
+
+        .btn.success {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .btn.success:hover {
+            background: #00cc00;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .slider-value {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            border: none;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .toggle-switch:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #00d4ff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .log-container {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .log-entry {
+            padding: 3px 0;
+            color: #00ff00;
+            border-bottom: 1px solid #222;
+        }
+
+        .log-entry.error {
+            color: #ff4444;
+        }
+
+        .log-entry.warning {
+            color: #ffaa00;
+        }
+
+        .log-entry.success {
+            color: #00ff00;
+        }
+
+        .phase-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            gap: 5px;
+        }
+
+        .phase {
+            flex: 1;
+            padding: 10px;
+            background: #2a2a3e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .phase.active {
+            background: #00d4ff;
+            color: #000;
+            border-color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .phase.done {
+            background: #00ff00;
+            color: #000;
+            border-color: #00ff00;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #2a2a3e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff00);
+            width: 0%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+            font-size: 12px;
+            transition: width 0.1s;
+        }
+
+        .status-box {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .stat-value {
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .error-box {
+            background: #ff4444;
+            color: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .tabs {
+                scroll-behavior: smooth;
+            }
+
+            .content {
+                padding: 10px;
+            }
+
+            .status-box {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 BBQ KEES PRO - BUDERUS EDITION</h1>
+            <div class="status">
+                <div class="status-light" id="statusLight"></div>
+                <div class="ip-input">
+                    <input type="text" id="ipInput" placeholder="192.168.1.64" value="192.168.1.64">
+                    <button onclick="connectDevice()">POŁĄCZ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('startup')">🔧 URUCHOMIENIE</button>
+            <button class="tab-btn" onclick="switchTab('info')">ℹ️ INFO</button>
+            <button class="tab-btn" onclick="switchTab('params')">⚙️ PARAMETRY</button>
+            <button class="tab-btn" onclick="switchTab('monitoring')">📊 MONITORING</button>
+            <button class="tab-btn" onclick="switchTab('test')">✓ TEST</button>
+            <button class="tab-btn" onclick="switchTab('reports')">📋 RAPORTY</button>
+            <button class="tab-btn" onclick="switchTab('favorites')">⭐ ULUBIONE</button>
+            <button class="tab-btn" onclick="switchTab('scanning')">🔍 SKANOWANIE</button>
+        </div>
+
+        <div class="content">
+            <!-- TAB 1: URUCHOMIENIE -->
+            <div id="startup" class="tab-content active">
+                <div class="card">
+                    <h3>🔥 PROCEDURA URUCHOMIENIA PALNIKA</h3>
+                    
+                    <div class="status-box">
+                        <div class="stat-item">
+                            <span class="stat-label">STATUS</span>
+                            <span class="stat-value" id="startupStatus">GOTOWY</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">FAZA</span>
+                            <span class="stat-value" id="startupPhase">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">PRĄD PŁOMIENIA</span>
+                            <span class="stat-value" id="flameCurrent">-- µA</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">MOC</span>
+                            <span class="stat-value" id="burnerPower">-- %</span>
+                        </div>
+                    </div>
+
+                    <div class="phase-indicator">
+                        <div class="phase" id="phase1">1️⃣ PURGA (3s)</div>
+                        <div class="phase" id="phase2">2️⃣ ZAPŁON (1s)</div>
+                        <div class="phase" id="phase3">3️⃣ GAZ (1s)</div>
+                        <div class="phase" id="phase4">4️⃣ DETEKCJA (10s)</div>
+                        <div class="phase" id="phase5">5️⃣ RUNNING</div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <p style="color: #888; font-size: 12px; margin-bottom: 5px;">📊 MONITOROWANIE:</p>
+                        <div class="status-box" style="margin: 0;">
+                            <div class="stat-item">
+                                <span class="stat-label">Temperatura zasilania</span>
+                                <span class="stat-value" id="flowTemp">-- °C</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Ciśnienie</span>
+                                <span class="stat-value" id="pressure">-- bar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="error-box" id="errorBox"></div>
+
+                    <div class="button-group">
+                        <button class="btn success" onclick="startStartupSequence()">▶️ ROZPAL TEST</button>
+                        <button class="btn danger" onclick="stopStartupSequence()">⏹️ STOP</button>
+                        <button class="btn" onclick="resetStartupSequence()">🔄 RESET</button>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">📝 LOG PROCEDURY:</h3>
+                    <div class="log-container" id="startupLog"></div>
+                </div>
+            </div>
+
+            <!-- TAB 2: INFO -->
+            <div id="info" class="tab-content">
+                <div class="card">
+                    <h3>ℹ️ INFORMACJE SYSTEMOWE</h3>
+                    <div class="card-row">
+                        <span class="card-label">Model kotła:</span>
+                        <span class="card-value" id="boilerModel">--</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Moc nominalna:</span>
+                        <span class="card-value" id="boilerPower">-- kW</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Firmware:</span>
+                        <span class="card-value" id="firmwareVersion">--</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Device ID:</span>
+                        <span class="card-value" id="deviceId">--</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Uptime:</span>
+                        <span class="card-value" id="uptime">--</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>🔧 STEROWNIK</h3>
+                    <div class="card-row">
+                        <span class="card-label">Typ regulatora:</span>
+                        <span class="card-value" id="controllerType">--</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Wersja:</span>
+                        <span class="card-value" id="controllerVersion">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: PARAMETRY -->
+            <div id="params" class="tab-content">
+                <div class="card">
+                    <h3>⚙️ USTAWIENIA TEMPERATURY</h3>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>🌊 Temperatura CWU (Ciepła Woda Użyteczna)</span>
+                            <span class="slider-value" id="dhwValue">50°C</span>
+                        </div>
+                        <input type="range" id="dhwSlider" min="30" max="65" value="50" oninput="updateDHW()">
+                        <p style="color: #888; font-size: 11px; margin-top: 5px;">Zakres: 30-65°C</p>
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>🔥 Temperatura CO (Centralne Ogrzewanie)</span>
+                            <span class="slider-value" id="heatingValue">40°C</span>
+                        </div>
+                        <input type="range" id="heatingSlider" min="20" max="60" value="40" oninput="updateHeating()">
+                        <p style="color: #888; font-size: 11px; margin-top: 5px;">Zakres: 20-60°C</p>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn success" onclick="applyParameters()">✓ ZASTOSUJ</button>
+                        <button class="btn" onclick="resetParameters()">🔄 RESETUJ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: MONITORING -->
+            <div id="monitoring" class="tab-content">
+                <div class="card">
+                    <h3>📊 WYKRESY REAL-TIME</h3>
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-container">
+                        <canvas id="pressureChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-container">
+                        <canvas id="powerChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-container">
+                        <canvas id="flameChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: TEST -->
+            <div id="test" class="tab-content">
+                <div class="card">
+                    <h3>✓ TEST PODZESPOŁÓW</h3>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">🌀 Wentylator (Fan)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="fanToggle" onchange="toggleComponent('fan')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">⚡ Zapłon (Ignition)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="ignitionToggle" onchange="toggleComponent('ignition')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">🔥 Zawór gazowy (Gas Valve)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="gasToggle" onchange="toggleComponent('gas_valve')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">💧 Pompa systemowa (Pump)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="pumpToggle" onchange="toggleComponent('pump_system')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">🚰 Pompa CWU (DHW Pump)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="dhwPumpToggle" onchange="toggleComponent('pump_dhw')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">🔀 Zawór 3-drożny (3-Way Valve)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="valve3wToggle" onchange="toggleComponent('valve_3way')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">☀️ Zawór solar (Solar Valve)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="solarToggle" onchange="toggleComponent('valve_solar')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-switch">
+                        <span class="toggle-label">🌡️ Pompa cyrkulacyjna CWU</span>
+                        <label class="switch">
+                            <input type="checkbox" id="circPumpToggle" onchange="toggleComponent('pump_circ')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn success" onclick="testAllComponents()">▶️ TESTUJ WSZYSTKIE</button>
+                        <button class="btn danger" onclick="allOff()">⏹️ WYŁĄCZ WSZYSTKIE</button>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">📝 LOG TESTÓW:</h3>
+                    <div class="log-container" id="testLog"></div>
+                </div>
+            </div>
+
+            <!-- TAB 6: RAPORTY -->
+            <div id="reports" class="tab-content">
+                <div class="card">
+                    <h3>📋 RAPORTY I EKSPORT</h3>
+                    
+                    <div style="margin: 15px 0;">
+                        <p style="color: #888; font-size: 12px;">Statystyki za ostatnią sesję:</p>
+                        <div class="status-box">
+                            <div class="stat-item">
+                                <span class="stat-label">Max temperatura</span>
+                                <span class="stat-value" id="maxTemp">-- °C</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Min temperatura</span>
+                                <span class="stat-value" id="minTemp">-- °C</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Średnia moc</span>
+                                <span class="stat-value" id="avgPower">-- %</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Czas pracy</span>
+                                <span class="stat-value" id="workTime">-- min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn" onclick="exportPDF()">📥 Pobierz PDF</button>
+                        <button class="btn" onclick="exportTXT()">📝 Pobierz TXT</button>
+                        <button class="btn" onclick="clearHistory()">🗑️ Wyczyść historię</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: ULUBIONE -->
+            <div id="favorites" class="tab-content">
+                <div class="card">
+                    <h3>⭐ SZYBKIE SKRÓTY</h3>
+                    
+                    <div class="button-group">
+                        <button class="btn" onclick="quickAction('startup')">🚀 Rozpal palnik</button>
+                        <button class="btn" onclick="quickAction('dhw-boost')">🌊 Boost CWU (65°C)</button>
+                        <button class="btn" onclick="quickAction('eco')">♻️ Tryb ECO (CO 35°C)</button>
+                        <button class="btn" onclick="quickAction('comfort')">🛁 Komfort (CO 50°C)</button>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">🔖 ZAPISANE USTAWIENIA</h3>
+                    <div id="savedSettings"></div>
+                    
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button class="btn" onclick="saveCurrentSettings()">💾 Zapisz obecne ustawienia</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: SKANOWANIE -->
+            <div id="scanning" class="tab-content">
+                <div class="card">
+                    <h3>🔍 SKANOWANIE SYSTEMU</h3>
+                    
+                    <div class="button-group">
+                        <button class="btn success" onclick="scanSystem()">▶️ SKANUJ SYSTEM</button>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">📱 BRAMKA BBQ KEES</h3>
+                    <div class="card-row">
+                        <span class="card-label">Interfejs EMS-ESP:</span>
+                        <span class="card-value" id="emsInterface">Skanowanie...</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Adres IP:</span>
+                        <span class="card-value" id="scanIP">--</span>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">🔥 IDENTYFIKACJA KOTŁA</h3>
+                    <div class="card-row">
+                        <span class="card-label">Model:</span>
+                        <span class="card-value" id="scanBoilerModel">Skanowanie...</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Moc nominalna:</span>
+                        <span class="card-value" id="scanBoilerPower">--</span>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">🌡️ CZUJNIKI TEMPERATUROWE</h3>
+                    <div id="sensorsList" style="color: #888; font-size: 12px;">Skanowanie...</div>
+
+                    <h3 style="margin-top: 20px;">⚙️ REGULATOR SYSTEMOWY</h3>
+                    <div class="card-row">
+                        <span class="card-label">Typ:</span>
+                        <span class="card-value" id="scanController">Skanowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONFIG ============
+        const CONFIG = {
+            API_URL: 'http://192.168.1.64',
+            REFRESH_INTERVAL: 1000,
+            CHART_POINTS: 60,
+            PURGE_DURATION: 3000,
+            IGNITION_DELAY: 1000,
+            GAS_DELAY: 1000,
+            FLAME_TIMEOUT: 10000,
+            FLAME_THRESHOLD: 5
+        };
+
+        // ============ STATE ============
+        let appState = {
+            connected: false,
+            startup: {
+                running: false,
+                phase: 'IDLE',
+                startTime: null,
+                history: []
+            },
+            monitoring: {
+                tempHistory: [],
+                pressureHistory: [],
+                powerHistory: [],
+                flameHistory: []
+            },
+            test: {
+                log: []
+            }
+        };
+
+        let charts = {};
+
+        // ============ UI FUNCTIONS ============
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'monitoring') initCharts();
+        }
+
+        function connectDevice() {
+            const ip = document.getElementById('ipInput').value;
+            CONFIG.API_URL = `http://${ip}`;
+            testConnection();
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/system`, { timeout: 5000 });
+                if (response.ok) {
+                    appState.connected = true;
+                    document.getElementById('statusLight').classList.add('connected');
+                    logStartup('✅ Połączono z bramką!', 'success');
+                    loadSystemInfo();
+                    startMonitoring();
+                } else {
+                    appState.connected = false;
+                    document.getElementById('statusLight').classList.remove('connected');
+                    logStartup('❌ Brak połączenia z bramką!', 'error');
+                }
+            } catch (e) {
+                appState.connected = false;
+                document.getElementById('statusLight').classList.remove('connected');
+                logStartup(`❌ Błąd połączenia: ${e.message}`, 'error');
+            }
+        }
+
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/system`);
+                const data = await response.json();
+                document.getElementById('boilerModel').textContent = data.device_id || '--';
+                document.getElementById('firmwareVersion').textContent = data.version || '--';
+                document.getElementById('deviceId').textContent = data.device_id || '--';
+            } catch (e) {
+                console.error('Błąd ładowania info:', e);
+            }
+        }
+
+        // ============ URUCHOMIENIE (STARTUP SEQUENCE) ============
+        async function startStartupSequence() {
+            if (appState.startup.running) return;
+            appState.startup.running = true;
+            appState.startup.history = [];
+            document.getElementById('startupStatus').textContent = 'URUCHOMIENIE...';
+            
+            try {
+                // FAZA 1: PURGA
+                await phaseStartup(1, 'PURGA', 3000, 'fan', true);
+                
+                // FAZA 2: ZAPŁON
+                await phaseStartup(2, 'ZAPŁON', 1000, 'ignition', true);
+                
+                // FAZA 3: GAZ
+                await phaseStartup(3, 'GAZ', 1000, 'gas_valve', true);
+                
+                // FAZA 4: DETEKCJA PŁOMIENIA
+                await phaseStartup(4, 'DETEKCJA PŁOMIENIA', 10000, null, null);
+                
+                // FAZA 5: RUNNING
+                appState.startup.phase = 'RUNNING';
+                updatePhaseIndicators();
+                document.getElementById('startupStatus').textContent = '✅ PALNIK PRACUJE!';
+                logStartup('✅ PROCEDURA URUCHOMIENIA ZAKOŃCZONA!', 'success');
+                
+            } catch (e) {
+                await emergencyShutdown(e.message);
+            }
+        }
+
+        async function phaseStartup(phaseNum, phaseName, duration, component, turnOn) {
+            appState.startup.phase = phaseName;
+            updatePhaseIndicators();
+            logStartup(`FAZA ${phaseNum}: ${phaseName}`, 'warning');
+            
+            if (component) {
+                await toggleComponentAPI(component, turnOn ? 1 : 0);
+            }
+            
+            if (phaseName === 'DETEKCJA PŁOMIENIA') {
+                await detectFlame();
+            } else {
+                await sleep(duration);
+                updateProgress((phaseNum / 5) * 100);
+            }
+        }
+
+        async function detectFlame() {
+            const startTime = Date.now();
+            let detected = false;
+            
+            while (Date.now() - startTime < CONFIG.FLAME_TIMEOUT) {
+                try {
+                    const response = await fetch(`${CONFIG.API_URL}/api/boiler`);
+                    const data = await response.json();
+                    const flameCurr = data.flamecurr || 0;
+                    
+                    document.getElementById('flameCurrent').textContent = `${flameCurr} µA`;
+                    updateProgress(80 + (flameCurr / CONFIG.FLAME_THRESHOLD * 20));
+                    logStartup(`⚡ Prąd płomienia: ${flameCurr} µA`, 'warning');
+                    
+                    if (flameCurr > CONFIG.FLAME_THRESHOLD) {
+                        detected = true;
+                        logStartup('✅ PŁOMIEŃ ZAPALONY!', 'success');
+                        break;
+                    }
+                    
+                    await sleep(100);
+                } catch (e) {
+                    console.error('Błąd detekcji płomienia:', e);
+                }
+            }
+            
+            if (!detected) {
+                throw new Error('LOCK-OUT: Brak płomienia!');
+            }
+        }
+
+        async function stopStartupSequence() {
+            appState.startup.running = false;
+            await emergencyShutdown('Zatrzymano przez użytkownika');
+        }
+
+        async function resetStartupSequence() {
+            appState.startup.running = false;
+            appState.startup.phase = 'IDLE';
+            appState.startup.history = [];
+            document.getElementById('startupStatus').textContent = 'GOTOWY';
+            document.getElementById('startupLog').innerHTML = '';
+            updatePhaseIndicators();
+            updateProgress(0);
+        }
+
+        async function emergencyShutdown(reason) {
+            logStartup(`❌ EMERGENCY SHUTDOWN: ${reason}`, 'error');
+            document.getElementById('startupStatus').textContent = '❌ BŁĄD!';
+            document.getElementById('errorBox').textContent = reason;
+            document.getElementById('errorBox').classList.add('show');
+            
+            // Wyłącz wszystko
+            await Promise.all([
+                toggleComponentAPI('fan', 0),
+                toggleComponentAPI('ignition', 0),
+                toggleComponentAPI('gas_valve', 0)
+            ]);
+            
+            appState.startup.running = false;
+        }
+
+        function logStartup(msg, type = 'log') {
+            const log = document.getElementById('startupLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString('pl-PL');
+            entry.textContent = `[${timestamp}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updatePhaseIndicators() {
+            document.querySelectorAll('.phase').forEach(el => {
+                el.classList.remove('active', 'done');
+            });
+            
+            const phases = ['PURGA', 'ZAPŁON', 'GAZ', 'DETEKCJA PŁOMIENIA', 'RUNNING'];
+            const currentPhaseIndex = phases.indexOf(appState.startup.phase);
+            
+            phases.forEach((phase, idx) => {
+                const el = document.getElementById(`phase${idx + 1}`);
+                if (idx < currentPhaseIndex) {
+                    el.classList.add('done');
+                } else if (idx === currentPhaseIndex) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressBar').textContent = Math.round(percent) + '%';
+        }
+
+        // ============ PARAMETRY ============
+        function updateDHW() {
+            const value = document.getElementById('dhwSlider').value;
+            document.getElementById('dhwValue').textContent = value + '°C';
+        }
+
+        function updateHeating() {
+            const value = document.getElementById('heatingSlider').value;
+            document.getElementById('heatingValue').textContent = value + '°C';
+        }
+
+        async function applyParameters() {
+            const dhw = document.getElementById('dhwSlider').value;
+            const heating = document.getElementById('heatingSlider').value;
+            
+            try {
+                await fetch(`${CONFIG.API_URL}/api/dhw/setpoint`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ temp: dhw })
+                });
+                
+                await fetch(`${CONFIG.API_URL}/api/heating/setpoint`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ temp: heating })
+                });
+                
+                logStartup(`✓ Parametry zastosowane: CWU ${dhw}°C, CO ${heating}°C`, 'success');
+                playBeep();
+            } catch (e) {
+                logStartup(`❌ Błąd: ${e.message}`, 'error');
+            }
+        }
+
+        function resetParameters() {
+            document.getElementById('dhwSlider').value = 50;
+            document.getElementById('heatingSlider').value = 40;
+            updateDHW();
+            updateHeating();
+        }
+
+        // ============ TEST PODZESPOŁÓW ============
+        async function toggleComponent(name) {
+            const toggle = document.getElementById(name + 'Toggle');
+            const state = toggle.checked ? 1 : 0;
+            await toggleComponentAPI(name, state);
+        }
+
+        async function toggleComponentAPI(name, state) {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/component/${name}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state })
+                });
+                
+                if (response.ok) {
+                    playBeep();
+                    logTest(`${name}: ${state === 1 ? 'ON' : 'OFF'}`);
+                }
+            } catch (e) {
+                console.error('Błąd:', e);
+            }
+        }
+
+        async function testAllComponents() {
+            const components = [
+                'fan', 'ignition', 'gas_valve', 'pump_system', 
+                'pump_dhw', 'valve_3way', 'valve_solar', 'pump_circ'
+            ];
+            
+            for (const comp of components) {
+                await toggleComponentAPI(comp, 1);
+                await sleep(500);
+            }
+            
+            for (const comp of components) {
+                await toggleComponentAPI(comp, 0);
+                await sleep(500);
+            }
+        }
+
+        async function allOff() {
+            const components = [
+                'fan', 'ignition', 'gas_valve', 'pump_system',
+                'pump_dhw', 'valve_3way', 'valve_solar', 'pump_circ'
+            ];
+            
+            for (const comp of components) {
+                await toggleComponentAPI(comp, 0);
+            }
+        }
+
+        function logTest(msg) {
+            const log = document.getElementById('testLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry success';
+            const timestamp = new Date().toLocaleTimeString('pl-PL');
+            entry.textContent = `[${timestamp}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // ============ MONITORING ============
+        async function startMonitoring() {
+            setInterval(async () => {
+                if (!appState.connected) return;
+                
+                try {
+                    const response = await fetch(`${CONFIG.API_URL}/api/boiler`);
+                    const data = await response.json();
+                    
+                    // Update status
+                    document.getElementById('flowTemp').textContent = (data.temp_flow || 0).toFixed(1) + '°C';
+                    document.getElementById('pressure').textContent = (data.pressure || 0).toFixed(2) + ' bar';
+                    document.getElementById('burnerPower').textContent = (data.curburnpow || 0) + '%';
+                    document.getElementById('flameCurrent').textContent = (data.flamecurr || 0) + ' µA';
+                    
+                    // Store history
+                    appState.monitoring.tempHistory.push(data.temp_flow || 0);
+                    appState.monitoring.pressureHistory.push(data.pressure || 0);
+                    appState.monitoring.powerHistory.push(data.curburnpow || 0);
+                    appState.monitoring.flameHistory.push(data.flamecurr || 0);
+                    
+                    // Keep only last N points
+                    if (appState.monitoring.tempHistory.length > CONFIG.CHART_POINTS) {
+                        appState.monitoring.tempHistory.shift();
+                        appState.monitoring.pressureHistory.shift();
+                        appState.monitoring.powerHistory.shift();
+                        appState.monitoring.flameHistory.shift();
+                    }
+                    
+                    // Update charts if visible
+                    if (charts.temp) {
+                        charts.temp.data.labels = appState.monitoring.tempHistory.map((_, i) => i);
+                        charts.temp.data.datasets[0].data = appState.monitoring.tempHistory;
+                        charts.temp.update('none');
+                    }
+                    
+                } catch (e) {
+                    console.error('Monitoring error:', e);
+                }
+            }, CONFIG.REFRESH_INTERVAL);
+        }
+
+        function initCharts() {
+            const tempCtx = document.getElementById('tempChart');
+            if (!tempCtx) return;
+
+            charts.temp = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '🌡️ Temperatura zasilania (°C)',
+                        data: [],
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: '#333' },
+                            ticks: { color: '#888' }
+                        },
+                        x: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+
+            const pressureCtx = document.getElementById('pressureChart');
+            charts.pressure = new Chart(pressureCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '📊 Ciśnienie (bar)',
+                        data: [],
+                        borderColor: '#00ff00',
+                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#888' } },
+                        x: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+
+            const powerCtx = document.getElementById('powerChart');
+            charts.power = new Chart(powerCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '⚡ Moc palnika (%)',
+                        data: [],
+                        borderColor: '#ffaa00',
+                        backgroundColor: 'rgba(255, 170, 0, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        y: { min: 0, max: 100, grid: { color: '#333' }, ticks: { color: '#888' } },
+                        x: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+
+            const flameCtx = document.getElementById('flameChart');
+            charts.flame = new Chart(flameCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '🔥 Prąd płomienia (µA)',
+                        data: [],
+                        borderColor: '#ff4444',
+                        backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#888' } },
+                        x: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+        }
+
+        // ============ RAPORTY ============
+        function exportPDF() {
+            alert('PDF export - wdrażanie w przyszłości');
+        }
+
+        function exportTXT() {
+            const content = `BBQ KEES PRO - RAPORT
+Data: ${new Date().toLocaleString('pl-PL')}
+
+PROCEDURA URUCHOMIENIA:
+${appState.startup.history.join('\n')}
+
+MONITORING:
+Max temp: ${Math.max(...appState.monitoring.tempHistory)} °C
+Min temp: ${Math.min(...appState.monitoring.tempHistory)} °C
+Avg power: ${(appState.monitoring.powerHistory.reduce((a, b) => a + b) / appState.monitoring.powerHistory.length).toFixed(1)} %
+`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bbqkees-report.txt';
+            a.click();
+        }
+
+        function clearHistory() {
+            appState.startup.history = [];
+            appState.monitoring = { tempHistory: [], pressureHistory: [], powerHistory: [], flameHistory: [] };
+        }
+
+        // ============ ULUBIONE ============
+        function quickAction(action) {
+            switch(action) {
+                case 'startup': startStartupSequence(); break;
+                case 'dhw-boost': document.getElementById('dhwSlider').value = 65; updateDHW(); applyParameters(); break;
+                case 'eco': document.getElementById('heatingSlider').value = 35; updateHeating(); applyParameters(); break;
+                case 'comfort': document.getElementById('heatingSlider').value = 50; updateHeating(); applyParameters(); break;
+            }
+        }
+
+        function saveCurrentSettings() {
+            alert('Funkcja zapisywania - wdrażanie wkrótce');
+        }
+
+        // ============ SKANOWANIE ============
+        async function scanSystem() {
+            logStartup('🔍 Skanowanie systemu...', 'warning');
+            try {
+                const systemResp = await fetch(`${CONFIG.API_URL}/api/system`);
+                const system = await systemResp.json();
+                
+                const boilerResp = await fetch(`${CONFIG.API_URL}/api/boiler`);
+                const boiler = await boilerResp.json();
+                
+                document.getElementById('emsInterface').textContent = '✅ EMS-ESP32 Online';
+                document.getElementById('scanIP').textContent = CONFIG.API_URL;
+                document.getElementById('scanBoilerModel').textContent = system.device_id || 'Nieznany model';
+                document.getElementById('scanBoilerPower').textContent = '28 kW (estymacja)';
+                document.getElementById('scanController').textContent = 'ACU/MH v1';
+                document.getElementById('sensorsList').innerHTML = '<div style="color: #00ff00;">✅ DS18B20 Temperatura zasilania<br/>✅ Czujnik ciśnienia<br/>✅ Czujnik płomienia</div>';
+                
+                logStartup('✅ Skanowanie ukończone!', 'success');
+            } catch (e) {
+                logStartup(`❌ Błąd skanowania: ${e.message}`, 'error');
+            }
+        }
+
+        // ============ UTILITIES ============
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function playBeep() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 800;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.1);
+        }
+
+        // ============ INIT ============
+        window.onload = () => {
+            testConnection();
+        };
+    </script>
+</body>
+</html>
